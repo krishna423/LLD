@@ -1,19 +1,12 @@
 package SnakeAndLadder;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
 public class Dice {
     private int noOfDice;
-
-    public Dice(int noOfDice) {
-        this.noOfDice = noOfDice;
-    }
-
-    public int getNoOfDice() {
-        return noOfDice;
-    }
-
-    public void setNoOfDice(int noOfDice) {
-        this.noOfDice = noOfDice;
-    }
 
     public int rollDice() {
         int max = 6 * noOfDice;

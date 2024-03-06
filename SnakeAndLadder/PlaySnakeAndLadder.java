@@ -3,6 +3,7 @@ package SnakeAndLadder;
 import java.util.*;
 
 public class PlaySnakeAndLadder {
+
     public static void main(String arg[])
     {
         Dice d=new Dice(1);
