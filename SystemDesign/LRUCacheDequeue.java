@@ -5,12 +5,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-class LRUCache {
+class LRUCacheDequeue {
 
     int size =0;
     Map<Integer,Integer> m = new HashMap<>();
     Deque<Integer> q = new LinkedList<>();
-    public LRUCache(int capacity) {
+    public LRUCacheDequeue(int capacity) {
         size = capacity;
     }
 
@@ -34,7 +34,7 @@ class LRUCache {
     }
 
     public static void main(String[] args) {
-        LRUCache l = new LRUCache(2);
+        LRUCacheDequeue l = new LRUCacheDequeue(2);
         System.out.println(l.get(2));
         l.put(2,6);
         System.out.println(l.get(1));

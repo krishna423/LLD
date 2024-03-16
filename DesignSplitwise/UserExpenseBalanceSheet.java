@@ -6,9 +6,9 @@ import java.util.Map;
 public class UserExpenseBalanceSheet {
 
     Map<String, Balance> userVsBalance;
-    double totalYourExpense;
+    double totalYourExpense; //
 
-    double totalPayment;
+    double totalPayment;// Total ideally
 
     double totalYouOwe;
     double totalYouGetBack;

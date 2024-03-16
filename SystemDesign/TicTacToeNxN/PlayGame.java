@@ -12,7 +12,7 @@ public class PlayGame {
         p2.setPlayerName("Pintosssss");
         p2.setPlayerSymbol('O');
         Player[] players = new Player[]{p1,p2};
-        GameBoard gb = new GameBoard(3,players);
+        GameBoard gb = new GameBoard(5,players);
         gb.startGame();
     }
 }
