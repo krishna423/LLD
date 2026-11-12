@@ -7,7 +7,7 @@ patterns, and core business logic.
 
 Work through the following problems in priority order.
 
-| Priority | LLD Problem                     | Main Concepts Tested |
+| Priority | LLD Problem                     | Concepts Tested |
 |:--------:|---------------------------------| --- |
 |  **1**   | **Splitwise / Expense Sharing** | Strategy pattern, balance calculation |
 |  **2**   | **Vending Machine**             | State pattern |
