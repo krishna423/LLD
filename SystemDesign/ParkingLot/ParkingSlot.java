@@ -10,7 +10,6 @@ import lombok.Setter;
 @Setter
 public class ParkingSlot {
     String name;
-    @Builder.Default
     boolean isAvailable = true;
     Vehicle vehicle;
     ParkingSlotType parkingSlotType;
