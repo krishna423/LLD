@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/DesignSkeleton/AzureService/AzureService.iml" filepath="$PROJECT_DIR$/DesignSkeleton/AzureService/AzureService.iml" />
       <module fileurl="file://$PROJECT_DIR$/DesignSkeleton/DesignSkeleton.iml" filepath="$PROJECT_DIR$/DesignSkeleton/DesignSkeleton.iml" />
       <module fileurl="file://$PROJECT_DIR$/HashMap/HashMap.iml" filepath="$PROJECT_DIR$/HashMap/HashMap.iml" />
       <module fileurl="file://$PROJECT_DIR$/LLD.iml" filepath="$PROJECT_DIR$/LLD.iml" />
