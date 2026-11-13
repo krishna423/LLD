@@ -12,8 +12,7 @@ public class ServiceBus {
 
     // 1. --------- Architectural Thinking -----------------------
     //
-    // I'll first break the Pub-Sub system into four major
-    // responsibilities:
+    // I'll first break the Pub-Sub system into four major responsibilities and identity components:
     //
     // 1. Message publishing
     // 2. Message routing and subscription management
@@ -24,7 +23,7 @@ public class ServiceBus {
     // responsibility and define how they interact.
 
 
-    // 2. --------- Identify Domain Objects ----------------------
+    // 2. --------- Identify Domain/corressponding Objects ----------------------
     //
     // 1. Publishing       -- Message, MessagePublisher
     // 2. Routing          -- Topic, Queue, Subscription, Broker
@@ -100,18 +99,6 @@ public class ServiceBus {
         boolean matches(Message message);
     }
 
-    // Strategy Pattern:
-    // Different filters can be implemented for subscriptions.
-
-    static class OrderTypeFilter implements MessageFilter {
-
-        @Override
-        public boolean matches(Message message) {
-            // Check message properties
-            return true;
-        }
-    }
-
 
     // ============================================================
     // 3. BROKER MANAGEMENT
@@ -128,32 +115,6 @@ public class ServiceBus {
 
         void publish(String topicName, Message message);
     }
-
-    // Adapter Pattern:
-    // Actual Azure Service Bus SDK implementation can be
-    // hidden behind this interface.
-
-    static class AzureServiceBusAdapter implements MessageBroker {
-
-        @Override
-        public void createTopic(String topicName) {
-            // Create Azure Service Bus topic
-        }
-
-        @Override
-        public void createSubscription(
-                String topicName,
-                String subscriptionName
-        ) {
-            // Create subscription under the topic
-        }
-
-        @Override
-        public void publish(String topicName, Message message) {
-            // Send message using Azure Service Bus SDK
-        }
-    }
-
 
     // ============================================================
     // 4. MESSAGE CONSUMPTION
@@ -175,24 +136,6 @@ public class ServiceBus {
         private String lockToken;
         private int deliveryCount;
         private Instant lockExpiryTime;
-    }
-
-    // Different consumers can implement different business logic.
-
-    static class PaymentConsumer implements MessageHandler {
-
-        @Override
-        public void handle(Message message) {
-            // Process payment event
-        }
-    }
-
-    static class EmailConsumer implements MessageHandler {
-
-        @Override
-        public void handle(Message message) {
-            // Send confirmation email
-        }
     }
 
 
@@ -217,13 +160,6 @@ public class ServiceBus {
         boolean shouldRetry(int deliveryCount);
     }
 
-    static class ExponentialRetryPolicy implements RetryPolicy {
-
-        @Override
-        public boolean shouldRetry(int deliveryCount) {
-            return deliveryCount < 5;
-        }
-    }
 
     static class DeadLetterQueue {
 
@@ -257,6 +193,37 @@ public class ServiceBus {
         // Consumer requests redelivery.
         void retry(String lockToken);
     }
+
+
+
+
+//    ------------------------------------- Not required ------------------------------------------
+
+    // Adapter Pattern:
+    // Actual Azure Service Bus SDK implementation can be
+    // hidden behind this interface.
+
+    static class AzureServiceBusAdapter implements MessageBroker {
+
+        @Override
+        public void createTopic(String topicName) {
+            // Create Azure Service Bus topic
+        }
+
+        @Override
+        public void createSubscription(
+                String topicName,
+                String subscriptionName
+        ) {
+            // Create subscription under the topic
+        }
+
+        @Override
+        public void publish(String topicName, Message message) {
+            // Send message using Azure Service Bus SDK
+        }
+    }
+
 
 
     // Facade Pattern:
@@ -296,6 +263,45 @@ public class ServiceBus {
         @Override
         public void retry(String lockToken) {
             // Abandon message or apply retry policy
+        }
+    }
+
+    // Strategy Pattern:
+    // Different filters can be implemented for subscriptions.
+
+    static class OrderTypeFilter implements MessageFilter {
+
+        @Override
+        public boolean matches(Message message) {
+            // Check message properties
+            return true;
+        }
+    }
+
+
+    // Different consumers can implement different business logic.
+
+    static class PaymentConsumer implements MessageHandler {
+
+        @Override
+        public void handle(Message message) {
+            // Process payment event
+        }
+    }
+
+    static class EmailConsumer implements MessageHandler {
+
+        @Override
+        public void handle(Message message) {
+            // Send confirmation email
+        }
+    }
+
+    static class ExponentialRetryPolicy implements RetryPolicy {
+
+        @Override
+        public boolean shouldRetry(int deliveryCount) {
+            return deliveryCount < 5;
         }
     }
 

@@ -1,3 +1,5 @@
+package BaseLearning;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +34,7 @@ public class ParkingLotSkeleton {
     //- Pricing-- may change from hourly to vehicle-based or dynamic pricing.
     //- New vehicle types--- and spot types may be introduced.
     //- Multiple entry gates--- may allocate spots concurrently.
-
+    // CancellationPolicy can change
 
     //1st Parking catalog management
     static class ParkingLot {
