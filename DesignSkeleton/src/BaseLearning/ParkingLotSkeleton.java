@@ -11,8 +11,8 @@ public class ParkingLotSkeleton {
 
 //1.---------architectural thinking------------------------------
     // I'll first break the parking lot into three major responsibilities:
-    // 1.Parking spot allocation/catelog,
-    // 2.Parking lifecycle management,
+    // 1.Parking spot allocation/catelog,--Non-functional but ready to use parking lot
+    // 2.Parking lifecycle management,- funcational at real time
     // 3.Payment calculation.
     // Then I'll identify the entities involved in each responsibility and define how they interact
 
