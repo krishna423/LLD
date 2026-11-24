@@ -51,23 +51,23 @@ public class PackageManagerSkeleton {
 
 // ================= DOMAIN MODELS =================
 
-    class Dependency {
+    static class Dependency {
           String packageName;
           String resolvedVersion;
     }
 
-    class PackageVersion {
+    static class PackageVersion {
         String version;
         List<Dependency> dependencies;
     }
 
-    class RegistryPackage {
+    static class RegistryPackage {
         String name;
         String ownerName;
         Map<String, PackageVersion> versions = new HashMap<>();
     }
 
-    class SecurityAdvisory {
+    static class SecurityAdvisory {
         String advisoryId;
         String packageName;
         String affectedVersion;
@@ -75,7 +75,7 @@ public class PackageManagerSkeleton {
         LocalDateTime publishedAt;
     }
 
-    class VulnerabilityFinding {
+    static class VulnerabilityFinding {
         String advisoryId;
         String vulnerablePackage;
         String vulnerableVersion;
@@ -116,7 +116,7 @@ public class PackageManagerSkeleton {
 
 // ================= DEPENDENCY GRAPH =================
 
-    class DependencyGraph implements IDependencyGraphManager {
+    static class DependencyGraph implements IDependencyGraphManager {
 
         // Dependency -> Packages that depend on it
         private final Map<String, Set<String>> dependentsGraphMap = new HashMap<>();
@@ -132,7 +132,7 @@ public class PackageManagerSkeleton {
         }
     }
 
-     class PackageAnalyzer implements IPackageAnalyzer{
+    static class PackageAnalyzer implements IPackageAnalyzer{
 
         // Dependency -> Packages that depend on it
         DependencyGraph dependencyGraph;
@@ -169,7 +169,7 @@ public class PackageManagerSkeleton {
 
 
     // Simplified exact-version matching for this interview implementation
-    class ExactVersionMatcher implements VersionMatcher {
+    static class ExactVersionMatcher implements VersionMatcher {
 
         @Override
         public boolean isAffected(String packageVersion, SecurityAdvisory advisory) {
@@ -179,7 +179,7 @@ public class PackageManagerSkeleton {
 
     // ================= IN-MEMORY REGISTRIES =================
 
-    class InMemoryPackageRegistry implements PackageRegistry {
+    static class InMemoryPackageRegistry implements PackageRegistry {
 
         private final Map<String, RegistryPackage> packages = new HashMap<>();
 
@@ -205,7 +205,7 @@ public class PackageManagerSkeleton {
         }
     }
 
-    class InMemoryAdvisoryRegistry implements AdvisoryRegistry {
+    static class InMemoryAdvisoryRegistry implements AdvisoryRegistry {
 
         private final Map<String, SecurityAdvisory> advisories = new HashMap<>();
 
