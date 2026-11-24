@@ -12,7 +12,7 @@ public class ServiceBus {
 
     // 1. --------- Architectural Thinking -----------------------
     //
-    // I'll first break the Pub-Sub system into four major responsibilities and identity components:
+    // I'll first break the Pub-Sub system into four major responsibilities/ user or system activities and identity components:
     //
     // 1. Message publishing
     // 2. Message routing and subscription management
