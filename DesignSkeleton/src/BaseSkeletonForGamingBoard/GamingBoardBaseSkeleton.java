@@ -1,4 +1,4 @@
-package GamingBaseSkeleton;
+package BaseSkeletonForGamingBoard;
 
 import java.util.List;
 

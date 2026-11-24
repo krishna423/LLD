@@ -1,4 +1,4 @@
-package GamingBaseSkeleton;
+package BaseSkeletonForGamingBoard;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

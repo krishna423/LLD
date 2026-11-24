@@ -1,4 +1,4 @@
-package GamingBaseSkeleton;
+package BaseSkeletonForGamingBoard;
 
 public class Main {
 

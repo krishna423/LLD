@@ -1,4 +1,4 @@
-package BaseLearning;
+package BaseSkeletonForCatalogTypeSystem;
 
 import java.time.Instant;
 import java.math.BigDecimal;

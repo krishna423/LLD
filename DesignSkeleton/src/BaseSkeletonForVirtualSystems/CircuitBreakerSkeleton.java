@@ -1,4 +1,4 @@
-package Imp;
+package BaseSkeletonForVirtualSystems;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.Callable;
