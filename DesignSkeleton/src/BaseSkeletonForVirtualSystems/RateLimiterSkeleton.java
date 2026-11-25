@@ -16,7 +16,7 @@ public class RateLimiterSkeleton {
      * 10 sec , allow only 5 requests
      * Fixed- {0-9 counter}, {10-19, counter}, update counter
      * Sliding - {currentTime-10sec, currentTime}: queue all requests
-     * TokenBucket - generted 5 token--- each request pick a token otherwise rejected
+     * TokenBucket --> TokenCount=5 --- each request reduce the count if 0 then rejected
      * LeakyBucket - { park requests in queue} and release at fixed rate
      * client bases, or Ip bases ??
      *
