@@ -4,10 +4,8 @@ public class Main {
 
     public static void main(String[] args) {
 
-        TicTocToeGamingBoard outer = new TicTocToeGamingBoard();
 
-        TicTocToeGamingBoard.TicTacToeGame game =
-                outer.new TicTacToeGame();
+        TicTocToeGamingBoard.TicTacToeGame game = new TicTocToeGamingBoard.TicTacToeGame();
 
         // Initialize all required components
         game.start();

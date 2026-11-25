@@ -17,7 +17,7 @@ public class TicTocToeGamingBoard {
 
     @Getter
     @AllArgsConstructor
-    class Player {
+    static class Player {
         private String id;
         private String name;
         private Symbol symbol;
@@ -27,7 +27,7 @@ public class TicTocToeGamingBoard {
 
     @Getter
     @AllArgsConstructor
-    class Move {
+    static class Move {
         private Player player;
         private int row;
         private int col;
@@ -56,7 +56,7 @@ public class TicTocToeGamingBoard {
 
 
     //---------------------------------Classess-------------------------------------------
-    class TicTacToeBoard implements Board{
+    static class TicTacToeBoard implements Board{
         // Initialize all cells to EMPTY
         private final Symbol[][] grid = new Symbol[3][3];
 
@@ -88,7 +88,7 @@ public class TicTocToeGamingBoard {
         // Implement board interface functions
     }
 
-    class TicTacToeMoveValidator implements MoveValidator {
+    static class TicTacToeMoveValidator implements MoveValidator {
 
         public boolean isValidMove(Board board, Move move) {
             // Check row and column boundaries
@@ -97,7 +97,7 @@ public class TicTocToeGamingBoard {
         }
     }
 
-    class TicTacToeWinningStrategy implements WinningStrategy {
+    static class TicTacToeWinningStrategy implements WinningStrategy {
 
         public GameStatus checkWinner(Board board, Symbol symbol) {
             // Check 3 rows
@@ -111,7 +111,7 @@ public class TicTocToeGamingBoard {
 
     //---------------------------Driver class/ orchestrator -----------------------------------------------
 
-     class TicTacToeGame {
+     static class TicTacToeGame {
 
         private Board board;
         private List<Player> players;
