@@ -37,7 +37,7 @@ public class CacheFramework {
     }
 
 
-    class EagerLoadingStrategy<K, V> implements ICacheLoadingStrategy<K, V> {
+    static class EagerLoadingStrategy<K, V> implements ICacheLoadingStrategy<K, V> {
 
          //Database Config loader
         @Override
@@ -48,7 +48,7 @@ public class CacheFramework {
     }
 
 
-     class LRUCacheImpl<K, V> implements ICache<K, V> {
+     static class LRUCacheImpl<K, V> implements ICache<K, V> {
         @Override
         public V get(K key) {
             return null;
@@ -90,7 +90,7 @@ public class CacheFramework {
         K getEvictionCandidate();
     }
 
-     class LRUCacheEvictionPolicyImpl<K, V> implements CacheEvictionPolicy<K, V> {
+     static class LRUCacheEvictionPolicyImpl<K, V> implements CacheEvictionPolicy<K, V> {
 
         ICache<K,V> cache;
 
@@ -121,7 +121,7 @@ public class CacheFramework {
     }
 
 
-    class TTLCacheEvictionPolicyImpl<K, V> implements CacheEvictionPolicy<K, V> {
+    static class TTLCacheEvictionPolicyImpl<K, V> implements CacheEvictionPolicy<K, V> {
 
         ICache<K,Pair<V, LocalDate>> cache;
 
@@ -152,7 +152,7 @@ public class CacheFramework {
         }
     }
 
-    class Pair<V, T> {
+    static class Pair<V, T> {
         V value ;
         T time;
 

@@ -48,12 +48,12 @@ public class RateLimiterSkeleton {
     }
 
 
-    class RateLimitingConfiguration {
+    static class RateLimitingConfiguration {
         int maxAllowedRequestCount;
         int windowTime;
     }
 
-    class FixedWindowIRateLimitingStrategy implements IRateLimitingStrategy {
+    static class FixedWindowIRateLimitingStrategy implements IRateLimitingStrategy {
 
         RateLimitingConfiguration rateLimitingConfiguration;
         private final Map<String, FixedWindow> clientWindows = new ConcurrentHashMap<>();
@@ -98,7 +98,7 @@ public class RateLimiterSkeleton {
         }
     }
 
-    class RateLimitingService implements IRateLimiterService {
+    static class RateLimitingService implements IRateLimiterService {
 
         RateLimitingConfiguration rateLimitingConfiguration;
         IRateLimitingStrategy rateLimitingStrategy;

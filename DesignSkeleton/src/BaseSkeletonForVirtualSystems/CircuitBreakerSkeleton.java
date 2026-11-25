@@ -31,7 +31,7 @@ public class CircuitBreakerSkeleton {
         // Queue<RequestRecord> to hold records
     }
 
-    public class RequestStatusTracker implements IRequestStatusTracker {
+    public static class RequestStatusTracker implements IRequestStatusTracker {
 
         private final Queue<RequestRecord> requests = new LinkedList<>(); // 1sec-noOfCounts
         private final long windowSizeMs;
@@ -74,7 +74,7 @@ public class CircuitBreakerSkeleton {
     }
 
 
-    class CircuitBreakerImpl implements CircuitBreaker {
+    static class CircuitBreakerImpl implements CircuitBreaker {
 
         private final CircuitBreakerConfig config;
         private final RequestStatusTracker failureTracker;
@@ -127,14 +127,14 @@ public class CircuitBreakerSkeleton {
 // 2. CONFIGURATION
 // ============================================================
 
-    class CircuitBreakerConfig {
+    static class CircuitBreakerConfig {
         int failureThreshold;
         long openDurationInSec;
         int halfOpenMaxCalls;
         int halfOpenSuccessThreshold;
     }
 
-    class RequestRecord {
+    static class RequestRecord {
         long timestamp;
         boolean success;
 
@@ -144,7 +144,7 @@ public class CircuitBreakerSkeleton {
         }
     }
 
-    class PaymentService {
+    static class PaymentService {
 
         public String processPayment() {
 
@@ -161,14 +161,9 @@ public class CircuitBreakerSkeleton {
 
         public static void main(String[] args) {
 
-            CircuitBreakerSkeleton skeleton = new CircuitBreakerSkeleton();
-            CircuitBreakerSkeleton.CircuitBreakerConfig config =
-                    skeleton.new CircuitBreakerConfig();
-
-            CircuitBreakerSkeleton.CircuitBreaker circuitBreaker =
-                    skeleton.new CircuitBreakerImpl(config);
-
-            CircuitBreakerSkeleton.PaymentService paymentService = skeleton.new PaymentService();
+            CircuitBreakerSkeleton.CircuitBreakerConfig config = new CircuitBreakerSkeleton.CircuitBreakerConfig();
+            CircuitBreakerSkeleton.CircuitBreaker circuitBreaker = new CircuitBreakerSkeleton.CircuitBreakerImpl(config);
+            CircuitBreakerSkeleton.PaymentService paymentService = new CircuitBreakerSkeleton.PaymentService();
 
             String response = circuitBreaker.execute(
                     paymentService::processPayment
