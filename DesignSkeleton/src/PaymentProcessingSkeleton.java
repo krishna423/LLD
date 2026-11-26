@@ -1,3 +1,5 @@
+import BaseSkeletonForVirtualSystems.NotificationServiceSkeleton;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;

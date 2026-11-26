@@ -5,6 +5,8 @@ import lombok.Getter;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -159,5 +161,77 @@ public class NotificationServiceSkeleton {
         String compiledMessage;
         String compiledSubject;
 
+    }
+
+
+
+
+
+    static  class NotificationService implements INotificationService{
+
+        INotificationQueue notificationQueue;
+
+        public NotificationService(INotificationQueue notificationQueue) {
+            this.notificationQueue = notificationQueue;
+        }
+
+        @Override
+        public NotificationResponse sendNotification(NotificationRequest notificationRequest) {
+            notificationQueue.enqueue(notificationRequest);
+            return null;
+        }
+    }
+
+
+    static class NotificationProcessor implements INotificationProcessor{
+        INotificationQueue notificationQueue;
+
+        public NotificationProcessor(INotificationQueue notificationQueue) {
+            this.notificationQueue = notificationQueue;
+        }
+
+        @Override
+        public NotificationRequest processNotification() {
+
+            Thread t = new Thread(() -> {
+                while (true){
+                    try {
+                        process(notificationQueue.take());
+
+                    } catch (InterruptedException e) {
+
+                    }
+                }
+            });
+            t.start();
+
+            return null;
+        }
+
+        private void process(NotificationRequest notificationRequest){
+            //pick request from queue
+            //Pick corresponding template
+            //check UserPreference
+            //Check rateLimiting
+            //compiled template message-- strategy (NotificationRequest-->Notification)
+            //Handover to notification Provider
+        }
+
+    }
+    public class NotificationApplication {
+
+        public static void main(String[] args) {
+
+            //Queue Creation
+            NotificationServiceSkeleton.INotificationQueue queue = new NotificationServiceSkeleton.InMemoryNotificationQueue();
+
+            //Start consumer
+            NotificationServiceSkeleton.NotificationProcessor processor = new NotificationServiceSkeleton.NotificationProcessor(queue);
+            processor.processNotification();
+
+            // Client request
+            NotificationServiceSkeleton.NotificationService service = new NotificationServiceSkeleton.NotificationService(queue);
+            service.sendNotification(new NotificationRequest());
+        }
     }
 }
