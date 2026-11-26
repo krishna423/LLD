@@ -4,6 +4,9 @@ import java.util.*;
 
 public class PackageManagerSkeleton {
 
+    // Flow--> client-->PackageRegistry --> imMemory ---> PackageAnalyzer --> VulnerablePackages
+
+
 // ================= ENUMS =================
 
     enum Severity {

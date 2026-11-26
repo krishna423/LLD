@@ -7,9 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RateLimiterSkeleton {
 
-    // ============================================================
-    // 9. RATE LIMITER SERVICE
-    // ============================================================
 
     /**
      * Config
@@ -21,6 +18,11 @@ public class RateLimiterSkeleton {
      * client bases, or Ip bases ??
      *
      */
+
+    // ============================================================
+    // Flow ---> client --> rateLimiter ---> request (Pass or rejected)
+    // ============================================================
+
 
     interface IRateLimiterService {
         Response validateRequest(Request request);

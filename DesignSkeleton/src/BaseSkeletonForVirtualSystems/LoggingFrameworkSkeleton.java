@@ -4,9 +4,10 @@ import java.time.Instant;
 
 public class LoggingFrameworkSkeleton {
 
-    //
-    // Flow client ---> log.debug(message)---->[ LoggingFramework (Use Formatter) ] --> Append Log in store
-    //
+
+    // Flow --> client ---> log.debug(message)---->[ LoggingFramework (Use Formatter) ] --> Append Log in store
+
+
     // LogEvent - client object to log
     // LogFormatter - formatting - PlainString, JSON
     // LogAppender - Console, File

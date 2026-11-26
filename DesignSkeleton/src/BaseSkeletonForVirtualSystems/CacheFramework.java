@@ -10,6 +10,9 @@ import java.time.LocalDate;
  */
 public class CacheFramework {
 
+    //Flow --> client-->CacheFramework(LRU,TTL)----imMemoryDB
+
+
     //Think it as an in-memory solution only without using any external component like DB, Kafka
     //DB , Kafka are related to HLD not LLD
 

@@ -5,7 +5,7 @@ import java.util.concurrent.Callable;
 
 public class CircuitBreakerSkeleton {
 
-
+    //Flow --> Client/Service --> CircuitBreakerFramework (circuit open/close)-> actualFunctionCall
 
     enum CircuitBreakerState {
         CLOSED,
