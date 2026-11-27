@@ -12,7 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class BulkFileDownloaderSkeleton {
+public class BulkFileDownloaderUsingSasUrlSkeleton {
 
     // 1 Million files
     //Flow  Client ---> BlobDownloadSDK --> getSasUrl, ListMetaData in pages , Queue, Download file by file
