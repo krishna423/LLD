@@ -1,45 +1,19 @@
-import BaseSkeletonForVirtualSystems.NotificationServiceSkeleton;
+package BaseSkeletonForVirtualSystems;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
-public class PaymentProcessingSkeleton {
+public class MerchantPaymentProcessingSkeleton {
 
-    // ============================================================
-    // 2. PAYMENT PROCESSING SYSTEM
-    // ============================================================
+//Flow client--> PaymentService -- PaymentProvider---DB
 
     enum PaymentStatus { CREATED, INITIATED, SUCCESS, FAILED, REFUNDED }
     enum PaymentMethodType { UPI, CARD, NET_BANKING }
 
-    static class Payment {
-        private String paymentId;
-        private String orderId;
-        private double amount;
-        private PaymentStatus status;
-        private PaymentMethodType methodType;
-    }
 
-    static class Refund {
-        private String refundId;
-        private String paymentId;
-        private double amount;
-    }
-
-    interface PaymentMethod {
-        PaymentResult pay(Payment payment);
-    }
-
-    interface PaymentGateway {
+    interface IPaymentProvider {
         PaymentResult charge(Payment payment);
         RefundResult refund(Payment payment, double amount);
+        PaymentResult getPaymentStatus(String providerTransactionId);
     }
 
     interface PaymentService {
@@ -54,6 +28,15 @@ public class PaymentProcessingSkeleton {
         void updateStatus(String paymentId, PaymentStatus status);
     }
 
+    static class Payment {
+        private String paymentId;
+        private String orderId;
+        private double amount;
+        private PaymentStatus status;
+        private PaymentMethodType methodType;
+    }
+
+    //Client initiated payment request
     static class PaymentRequest {
         private String orderId;
         private double amount;
@@ -69,5 +52,23 @@ public class PaymentProcessingSkeleton {
     static class RefundResult {
         private boolean successful;
         private String refundReference;
+    }
+
+    class RazorpayProvider implements IPaymentProvider {
+        @Override
+        public PaymentResult charge(Payment payment) {
+            return null;
+        }
+
+        @Override
+        public RefundResult refund(Payment payment, double amount) {
+            return null;
+        }
+
+        @Override
+        public PaymentResult getPaymentStatus(String providerTransactionId) {
+            return null;
+        }
+        // Razorpay-specific implementation
     }
 }
