@@ -1,3 +1,5 @@
+import lombok.Getter;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -5,9 +7,8 @@ import java.util.Optional;
 
 public class ServiceBus {
 
-    // ============================================================
-    // 1. PUB-SUB (AZURE SERVICE BUS) SYSTEM
-    // ============================================================
+
+    //Flow --> client --> publish message -->  Queue ---> consumer --> MessageHandler , send ack --> DLQ
 
 
     // 1. --------- Architectural Thinking -----------------------
@@ -18,153 +19,83 @@ public class ServiceBus {
     // 2. Message routing and subscription management
     // 3. Message consumption
     // 4. Message acknowledgment and retry management
-    //
-    // Then I'll identify the entities involved in each
-    // responsibility and define how they interact.
 
 
-    // 2. --------- Identify Domain/corressponding Objects ----------------------
-    //
-    // 1. Publishing       -- Message, MessagePublisher
-    // 2. Routing          -- Topic, Queue, Subscription, Broker
-    // 3. Consumption      -- MessageConsumer, MessageHandler
-    // 4. Acknowledgment   -- MessageDelivery, MessageSettlement
-    // 5. Retry            -- RetryPolicy, DeadLetterQueue
 
 
-    // 3. --------- Identify Orchestration Layer -----------------
-    //
-    // PubSubService coordinates publishing and consumption.
-    //
-    // Publisher sends a message to a topic.
-    // Broker routes the message to matching subscriptions.
-    // Consumer receives and processes the message.
-    // Consumer acknowledges successful processing.
-    // Failed messages can be retried or moved to DLQ.
 
+    interface MessageBroker {
+        void createTopic(String topicName);
+        void createSubscription(String topicName, String subscriptionName);
+        void publish(String topicName, Message message);
+        //IQueueManager
+    }
 
-    // 4. --------- Identify What May Change ---------------------
-    //                 Open-Closed Principle
-    //
-    // - Routing: Queue-based or Topic-based.
-    // - Filtering: Different subscription filters.
-    // - Retry: Fixed delay or Exponential backoff.
-    // - Delivery: Peek-Lock or Receive-and-Delete.
-    // - Message handling: Different consumers for events.
-    // - Broker: Azure Service Bus or another messaging provider.
-
-
-    // ============================================================
-    // 1. MESSAGE PUBLISHING
-    // ============================================================
-
-    static class Message {
-
-        private String messageId;
-        private String payload;
-        private Map<String, Object> properties;
-        private Instant createdAt;
+    static class IQueueManager {
+        private Map<String, Topic> topicMap;
     }
 
     interface MessagePublisher {
-
         void publish(String topicName, Message message);
-    }
-
-
-    // ============================================================
-    // 2. MESSAGE ROUTING / SUBSCRIPTION MANAGEMENT
-    // ============================================================
-
-    static class Topic {
-
-        private String topicName;
-        private List<Subscription> subscriptions;
-    }
-
-    static class Queue {
-
-        private String queueName;
-    }
-
-    static class Subscription {
-
-        private String subscriptionName;
-        private String topicName;
-        private MessageFilter messageFilter;
-    }
-
-    interface MessageFilter {
-
-        boolean matches(Message message);
-    }
-
-
-    // ============================================================
-    // 3. BROKER MANAGEMENT
-    // ============================================================
-
-    interface MessageBroker {
-
-        void createTopic(String topicName);
-
-        void createSubscription(
-                String topicName,
-                String subscriptionName
-        );
-
-        void publish(String topicName, Message message);
-    }
-
-    // ============================================================
-    // 4. MESSAGE CONSUMPTION
-    // ============================================================
-
-    interface MessageConsumer {
-
-        Optional<MessageDelivery> receive(String subscriptionName);
+        //use MessageBroker
     }
 
     interface MessageHandler {
-
         void handle(Message message);
     }
 
-    static class MessageDelivery {
+    interface MessageSettlement {
+        void complete(String lockToken);
+        void abandon(String lockToken);
+        void deadLetter(String lockToken, String reason);
+    }
 
+    interface MessageConsumer {
+        Optional<MessageDelivery> receive(String subscriptionName);
+        //IQueueManager
+        //MessageHandler
+        //MessageSettlement
+        //Retry Logic
+         //mm.complete(MessageDelivery.lockToken())
+    }
+
+    static class MessageDelivery {
         private Message message;
         private String lockToken;
         private int deliveryCount;
         private Instant lockExpiryTime;
     }
 
-
-    // ============================================================
-    // 5. MESSAGE ACKNOWLEDGMENT / SETTLEMENT
-    // ============================================================
-
-    interface MessageSettlement {
-
-        void complete(String lockToken);
-
-        void abandon(String lockToken);
-
-        void deadLetter(String lockToken, String reason);
+    static class Message {
+        private String messageId;
+        private String payload;
+        private Map<String, Object> properties;
+        private Instant createdAt;
     }
+
+    static class Topic {
+        private String topicName;
+        private List<Subscription> subscriptions;
+    }
+
+
+    static class Subscription {
+        private String subscriptionName;
+        private String topicName;
+    }
+
 
     // Retry Strategy Pattern:
     // Retry logic can change independently.
 
     interface RetryPolicy {
-
         boolean shouldRetry(int deliveryCount);
+        //DeadLetterQueue
     }
 
 
     static class DeadLetterQueue {
-
         private String queueName;
-
         void add(Message message, String reason) {
             // Move message to DLQ
         }
@@ -174,25 +105,14 @@ public class ServiceBus {
     // ============================================================
     // 6. ORCHESTRATION LAYER
     // ============================================================
+//    class Main {
+//
+//        public static void main(String[] args) {
+//
+//        }
+//
+//    }
 
-    interface PubSubService {
-
-        // Publisher sends a message to a topic.
-        void publish(String topicName, Message message);
-
-        // Register consumer for a topic subscription.
-        void subscribe(
-                String topicName,
-                String subscriptionName,
-                MessageHandler handler
-        );
-
-        // Consumer acknowledges successful processing.
-        void acknowledge(String lockToken);
-
-        // Consumer requests redelivery.
-        void retry(String lockToken);
-    }
 
 
 
@@ -225,85 +145,35 @@ public class ServiceBus {
     }
 
 
-
-    // Facade Pattern:
-    // PubSubService provides a simple interface to the
-    // underlying publishing, routing and consumption logic.
-
-    static class PubSubServiceImpl implements PubSubService {
-
-        private MessageBroker messageBroker;
-        private MessagePublisher messagePublisher;
-        private MessageSettlement messageSettlement;
-        private RetryPolicy retryPolicy;
-
-        @Override
-        public void publish(String topicName, Message message) {
-            // Validate message
-            // Delegate publishing to MessagePublisher
-            // Route message to the topic
-        }
-
-        @Override
-        public void subscribe(
-                String topicName,
-                String subscriptionName,
-                MessageHandler handler
-        ) {
-            // Register consumer for subscription
-            // Receive messages
-            // Delegate business processing to handler
-        }
-
-        @Override
-        public void acknowledge(String lockToken) {
-            // Complete message using settlement service
-        }
-
-        @Override
-        public void retry(String lockToken) {
-            // Abandon message or apply retry policy
-        }
-    }
-
-    // Strategy Pattern:
-    // Different filters can be implemented for subscriptions.
-
-    static class OrderTypeFilter implements MessageFilter {
-
-        @Override
-        public boolean matches(Message message) {
-            // Check message properties
-            return true;
-        }
-    }
+    // 2. --------- Identify Domain/corressponding Objects ----------------------
+    //
+    // 1. Publishing       -- Message, MessagePublisher
+    // 2. Routing          -- Topic, Queue, Subscription, Broker
+    // 3. Consumption      -- MessageConsumer, MessageHandler
+    // 4. Acknowledgment   -- MessageDelivery, MessageSettlement
+    // 5. Retry            -- RetryPolicy, DeadLetterQueue
 
 
-    // Different consumers can implement different business logic.
+    // 3. --------- Identify Orchestration Layer -----------------
+    //
+    // PubSubService coordinates publishing and consumption.
+    //
+    // Publisher sends a message to a topic.
+    // Broker routes the message to matching subscriptions.
+    // Consumer receives and processes the message.
+    // Consumer acknowledges successful processing.
+    // Failed messages can be retried or moved to DLQ.
 
-    static class PaymentConsumer implements MessageHandler {
 
-        @Override
-        public void handle(Message message) {
-            // Process payment event
-        }
-    }
-
-    static class EmailConsumer implements MessageHandler {
-
-        @Override
-        public void handle(Message message) {
-            // Send confirmation email
-        }
-    }
-
-    static class ExponentialRetryPolicy implements RetryPolicy {
-
-        @Override
-        public boolean shouldRetry(int deliveryCount) {
-            return deliveryCount < 5;
-        }
-    }
+    // 4. --------- Identify What May Change ---------------------
+    //                 Open-Closed Principle
+    //
+    // - Routing: Queue-based or Topic-based.
+    // - Filtering: Different subscription filters.
+    // - Retry: Fixed delay or Exponential backoff.
+    // - Delivery: Peek-Lock or Receive-and-Delete.
+    // - Message handling: Different consumers for events.
+    // - Broker: Azure Service Bus or another messaging provider.
 
 }
 
