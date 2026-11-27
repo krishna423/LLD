@@ -14,36 +14,46 @@ import java.util.concurrent.Future;
 
 public class BulkFileDownloaderSkeleton {
 
-    // 1. Like -AUth Server - Obtain folder-scoped SAS access
+    // 1 Million files
+    //Flow  Client ---> BlobDownloadSDK --> getSasUrl, ListMetaData in pages , Queue, Download file by file
+    //Checkpoint manager
+
+
     interface ISASTokenProvider {
         SasToken getSASUrl(String folderPath);
         SasToken refreshSASUrl(String folderPath);
     }
 
-    // 2. Rest Call to Azure Blob Storage
+    interface IBlobMetadataFetchService {
+        void startJob(ScheduledJob job, SasToken sasToken);
+    }
+
+    interface IDownloadWorker extends Runnable {
+        //run method
+        //download file one by one
+    }
+
+    //Coordinate the complete operation
+    interface IBlobDownloadSDK {
+        DownloadResponse startDownload(DownloadRequest request);
+        //Get SAS URL -ISASTokenProvider
+        //Get Metadata - IBlobMetadataFetchService
+        //Push in Queue - IDownloadQueue
+        //Consume from queue and download blobs - IDownloadWorker
+    }
+
+    //Rest Call to Azure Blob Storage
     interface IBlobStorageClient {
         BlobMetaDataDetailsPage listBlobPages(SasToken sasToken, String folderPath, String continuationToken, int pageSize);
         void downloadBlob(SasToken sasToken, String blobName, String expectedETag, Path destination);
     }
 
-    // 3. Producer - Discover blobs and produce download tasks
-    interface IBlobListingService {
-        void startListing(RequestDetails job, SasToken sasToken);
-    }
-
-    // 4. Producer-consumer communication
     interface IDownloadQueue {
         void submit(DownloadTask task) throws InterruptedException;
         DownloadTask take() throws InterruptedException;
         //Powered by blocking queue -- Input-output controlled
     }
 
-    // 5. Consumer - Download individual files
-    interface IDownloadWorker extends Runnable {
-        //run method
-    }
-
-    // 6. Track completed downloads
     interface ICheckpointManager {
         boolean isDownloaded(String blobName, String etag);
         void markCompleted(String blobName, String etag);
@@ -51,19 +61,10 @@ public class BulkFileDownloaderSkeleton {
 
     }
 
-    // 7. Retry decisions
     interface IRetryPolicy {
         boolean shouldRetry(Exception exception, int attempt);
         long getRetryDelayMillis(int attempt);
     }
-
-    // 8. Coordinate the complete operation
-    interface IDownloadCoordinator {
-        DownloadResponse startDownload(DownloadRequest request);
-        void stopDownload(String jobId);
-        RequestDetails getJobStatus(String jobId);
-    }
-
 
     enum JobStatus {
         CREATED, RUNNING, COMPLETED, COMPLETED_WITH_ERRORS, FAILED, CANCELLED
@@ -78,7 +79,14 @@ public class BulkFileDownloaderSkeleton {
          String localDestination;
          int workerCount;
          int pageSize;
-    }
+
+         public DownloadRequest(String folderPath, String localDestination, int workerCount, int pageSize) {
+             this.folderPath = folderPath;
+             this.localDestination = localDestination;
+             this.workerCount = workerCount;
+             this.pageSize = pageSize;
+         }
+     }
      static class SasToken {
 
          String sasUrl;
@@ -116,13 +124,13 @@ public class BulkFileDownloaderSkeleton {
 
 
     }
-     static class RequestDetails {
+     static class ScheduledJob {
 
          String jobId;
          DownloadRequest request;
          volatile JobStatus status;
 
-         public RequestDetails(String jobId, DownloadRequest request) {
+         public ScheduledJob(String jobId, DownloadRequest request) {
              this.jobId = jobId;
              this.request = request;
          }
@@ -132,7 +140,19 @@ public class BulkFileDownloaderSkeleton {
 
          String jobId;
          JobStatus status;
-    }
+
+         public DownloadResponse(String jobId, JobStatus status) {
+             this.jobId = jobId;
+             this.status = status;
+         }
+     }
+
+
+
+
+
+
+
 
 //Azure Rest client call
     static class AzureBlobStorageClient implements IBlobStorageClient {
@@ -157,24 +177,24 @@ public class BulkFileDownloaderSkeleton {
 
 
 //Producer
-     static class BlobListingService implements IBlobListingService {
+     static class BlobMetadataFetchService implements IBlobMetadataFetchService {
 
         private final IBlobStorageClient storageClient;
         private final IDownloadQueue downloadQueue;
 
-        public BlobListingService(IBlobStorageClient storageClient, IDownloadQueue downloadQueue) {
+        public BlobMetadataFetchService(IBlobStorageClient storageClient, IDownloadQueue downloadQueue) {
             this.storageClient = storageClient;
             this.downloadQueue = downloadQueue;
         }
 
         @Override
-        public void startListing(RequestDetails requestDetails, SasToken sasToken) {
+        public void startJob(ScheduledJob scheduledJob, SasToken sasToken) {
 
             String continuationToken = null;
 
             try {
                 do {
-                    BlobMetaDataDetailsPage page = storageClient.listBlobPages(sasToken, requestDetails.request.folderPath, continuationToken, requestDetails.request.pageSize);
+                    BlobMetaDataDetailsPage page = storageClient.listBlobPages(sasToken, scheduledJob.request.folderPath, continuationToken, scheduledJob.request.pageSize);
 
                     for (BlobMetadata blobMetadata : page.blobs) {
                         DownloadTask task = new DownloadTask(blobMetadata);
@@ -265,28 +285,28 @@ public class BulkFileDownloaderSkeleton {
         }
     }
 
-    class DownloadCoordinator implements IDownloadCoordinator {
+    static class BlobDownloadSDK implements IBlobDownloadSDK {
 
         private final ISASTokenProvider sasTokenProvider;
         private final IBlobStorageClient storageClient;
-        private final IBlobListingService listingService;
+        private final IBlobMetadataFetchService blobDownloaderService;
         private final IDownloadQueue queue;
         private final ICheckpointManager checkpointManager;
         private final IRetryPolicy retryPolicy;
 
-        private final Map<String, RequestDetails> jobs = new ConcurrentHashMap<>();
+        private final Map<String, ScheduledJob> jobs = new ConcurrentHashMap<>();
 
-        public DownloadCoordinator(
+        public BlobDownloadSDK(
                 ISASTokenProvider sasTokenProvider,
                 IBlobStorageClient storageClient,
-                IBlobListingService listingService,
+                IBlobMetadataFetchService blobDownloaderService,
                 IDownloadQueue queue,
                 ICheckpointManager checkpointManager,
                 IRetryPolicy retryPolicy) {
 
             this.sasTokenProvider = sasTokenProvider;
             this.storageClient = storageClient;
-            this.listingService = listingService;
+            this.blobDownloaderService = blobDownloaderService;
             this.queue = queue;
             this.checkpointManager = checkpointManager;
             this.retryPolicy = retryPolicy;
@@ -297,70 +317,66 @@ public class BulkFileDownloaderSkeleton {
 
             String jobId = UUID.randomUUID().toString();
 
-            RequestDetails job = new RequestDetails(jobId, request);
-            job.status = JobStatus.RUNNING;
+            ScheduledJob scheduledJob = new ScheduledJob(jobId, request);
+            scheduledJob.status = JobStatus.RUNNING;
 
-            jobs.put(jobId, job);
+            jobs.put(jobId, scheduledJob);
             SasToken sasToken = sasTokenProvider.getSASUrl("");
 
-            ExecutorService executor = Executors.newFixedThreadPool(request.workerCount + 1);
-
+            ExecutorService executor = Executors.newFixedThreadPool(request.workerCount);
             List<Future<?>> workerFutures = new ArrayList<>();
 
             try {
                 // Start consumers first.
                 for (int i = 0; i < request.workerCount; i++) {
-                    DownloadWorker worker = new DownloadWorker(queue, storageClient, checkpointManager, job);
+                    DownloadWorker worker = new DownloadWorker(queue, storageClient, checkpointManager,sasToken);
                     workerFutures.add(executor.submit(worker));
                 }
 
-                // Start producer independently.
-                Future<?> listingFuture = executor.submit(() -> listingService.startListing(job, sasToken)
-                );
-
-                // Wait until all pages have been listed and submitted.
-                listingFuture.get();
-
+                // Start process Job
+                blobDownloaderService.startJob(scheduledJob, sasToken);
                 // Tell all workers that no more tasks will arrive.
-                for (int i = 0; i < request.workerCount; i++) {
-                    queue.submit(DownloadTask.poisonPill());
-                }
+                // Add position Pill to stop workers
 
                 // Wait until all workers finish.
                 for (Future<?> future : workerFutures) {
                     future.get();
                 }
 
-
-
             } catch (Exception e) {
-
-                job.setStatus(JobStatus.FAILED);
-
-                throw new RuntimeException(
-                        "Download job failed: " + jobId, e
-                );
-
+                scheduledJob.status = JobStatus.FAILED;
+                throw new RuntimeException("Download scheduledJobs failed: " + jobId, e);
             } finally {
                 executor.shutdownNow();
             }
-
-            return new DownloadResponse(
-                    jobId,
-                    job.getStatus()
-            );
+            return new DownloadResponse(jobId, scheduledJob.status);
         }
+    }
 
-        @Override
-        public void stopDownload(String jobId) {
-            // Production implementation:
-            // Maintain an executor/cancellation token per job
-            // and interrupt the listing and worker tasks.
-        }
+    public class DownloadApplication {
 
-        @Override
-        public DownloadJob getJobStatus(String jobId) {
-            return jobs.get(jobId);
+        public static void main(String[] args) {
+
+            // 1. Create infrastructure components
+
+//            IDownloadQueue queue = new InMemoryDownloadQueue(1000);
+//            ICheckpointManager checkpointManager = new InMemoryCheckpointManager();
+//            IRetryPolicy retryPolicy = new DefaultRetryPolicy();
+//            IBlobStorageClient storageClient = new AzureBlobStorageClient();
+//            ISasTokenProvider sasTokenProvider = new SASTokenProvider();
+//
+//            // 2. Create DownloaderService service
+//            IBlobDownloaderService listingService = new BlobDownloaderService(storageClient, queue);
+//
+//            // 3. Create SDK
+//            IBlobDownloadSDK blobDownloadSDK = new BlobDownloadSDK(sasTokenProvider, storageClient, listingService, queue, checkpointManager, retryPolicy);
+//
+//            // 4. Create request
+//            DownloadRequest request = new DownloadRequest("folder-B/", "/downloads", 10, 1000);
+//
+//            // 5. Start download
+//            DownloadResponse response = coordinator.startDownload(request);
+//            System.out.println("Job ID: " + response.jobId + "   Status " + response.status );
         }
     }
 
